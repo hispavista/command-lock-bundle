@@ -59,8 +59,19 @@ command_lock:
 
 ...
 ```
-The commands listed in this configurations will be allowed to run simultaneously.
+###
+5) [OPTIONAL] Configure the max life time of the commands
+### app/config/config.yml
+```yaml
+...
 
+command_lock:
+    default_max_life_time: 2400
+    max_life_times:
+        - {command: 'bundle:command1', time: 600}
+        - {command: 'bundle:command2', time: 400}
+...
+```
 ***
 
 Now you have the `command-lock-bundle` installed and configured, it will now prevents two or more of same command runs simultaneously.
