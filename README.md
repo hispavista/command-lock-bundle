@@ -59,6 +59,8 @@ command_lock:
 
 ...
 ```
+-The commands listed in this configurations will be allowed to run simultaneously.
+
 ###
 5) [OPTIONAL] Configure the max life time of the commands
 ### app/config/config.yml
