@@ -37,6 +37,21 @@ class Configuration implements ConfigurationInterface
                         ->prototype('scalar')
                     ->end()
                 ->end()
+                ->arrayNode($this->maxLifeTimesListSetting)
+                    ->info('Define a list of values [command , time] to define the max life time of thecommand')
+                    ->defaultValue(array())
+                    ->prototype('array')
+                        ->children()
+                            ->scalarNode('command')->end()
+                            ->integerNode('time')->end()
+                        ->end() 
+                    ->end()
+                ->end()
+                ->integerNode($this->defaultMaxLifeTimeSetting)
+                    ->info('Define the maximum life time for a command')
+                    ->defaultValue(82800)//23*3600
+                    ->cannotBeEmpty()
+                ->end()
             ->end()
         ;
 
