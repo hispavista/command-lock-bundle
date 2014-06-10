@@ -64,6 +64,8 @@ class CommandLockEventListenerTest extends \PHPUnit_Framework_TestCase
             array(
                 $this->pidDirectorySetting => $this->pidDirectory,
                 $this->exceptionsListSetting => $this->exceptionsList,
+		$this->defaultMaxLifeTimeSetting => 600,
+		$this->maxLifeTimesListSetting => array()
             )
         );
     }
@@ -107,6 +109,7 @@ class CommandLockEventListenerTest extends \PHPUnit_Framework_TestCase
             "Command \"cache:clear\" already running with pid \"{$myPid}\"",
             0
         );
+        static::$firstInitiatedListener = new CommandLockEventListener($this->container);
         static::$firstInitiatedListener->onConsoleCommand($consoleCommandEvent);
     }
 
@@ -131,6 +134,7 @@ class CommandLockEventListenerTest extends \PHPUnit_Framework_TestCase
         $inputForTesting     = new ArrayInput(array());
         $outputForTesting    = new StreamOutput(fopen('php://memory', 'w', false));
         $consoleCommandEvent = new ConsoleCommandEvent($commandForTesting, $inputForTesting, $outputForTesting);
+        static::$firstInitiatedListener = new CommandLockEventListener($this->container);
         static::$firstInitiatedListener->onConsoleCommand($consoleCommandEvent);
         $this->assertFileExists($pidFile);
         $this->assertEquals($myPid, file_get_contents($pidFile));
@@ -152,6 +156,7 @@ class CommandLockEventListenerTest extends \PHPUnit_Framework_TestCase
         $pidFile2 = $this->pidDirectory.'/testfile2.pid';
         file_put_contents($pidFile2, 'test2');
 
+        static::$firstInitiatedListener = new CommandLockEventListener($this->container);
         static::$firstInitiatedListener->shutDown($pidFile2);
         $this->assertFileNotExists($pidFile2);
     }

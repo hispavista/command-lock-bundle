@@ -67,7 +67,9 @@ class CommandLockEventListener extends ContainerAware
         //Get the max life times of the commands
         $this->maxLifeTimes=$container->getParameter($this->configurationsParameterKey)[$this->maxLifeTimesListSetting];
         // get the logger
-        $this->logger=$container->get('logger');
+        if ($container->has('logger')){
+            $this->logger=$container->get('logger');
+        }
     }
 
     /**
@@ -88,26 +90,26 @@ class CommandLockEventListener extends ContainerAware
         $pidFile = $this->pidFile = $this->pidDirectory . "/{$clearedCommandName}.pid";
         // check if command is already executing
         if (file_exists($pidFile)) {
-            $this->logger->info("$commandName -> File exists: $pidFile");
+            $this->log("info","$commandName -> File exists: $pidFile");
             $pidOfRunningCommand = file_get_contents($pidFile);
             if (posix_getpgid($pidOfRunningCommand) !== false) {
                 //Get the file change/creation date
                 $lifeTime= time()-filectime($pidFile)  ;
-                $this->logger->info("$commandName -> Command max life time : ".$this->defaultMaxLifeTime);
-                $this->logger->info("$commandName -> Command life time : $lifeTime");
+                $this->log("info","$commandName -> Command max life time : ".$this->defaultMaxLifeTime);
+                $this->log("info","$commandName -> Command life time : $lifeTime");
                 
                 //Check if the process life time is over
                 if ($lifeTime<$this->getMaxLifeTime($commandName)){
-                    $this->logger->warn("$commandName -> Command already runing");
+                    $this->log("warn","$commandName -> Command already runing");
                     throw (new CommandAlreadyRunningException)
                         ->setCommandName($commandName)
                         ->setPidNumber($pidOfRunningCommand);
                 }
                 else{
                     //kill the command 
-                    $this->logger->warn("$commandName -> Killing The command");
+                    $this->log("warn","$commandName -> Killing The command");
 					if (!posix_kill ($pidOfRunningCommand,9)){
-                        $this->logger->error("$commandName -> Error killing the command");
+                        $this->log("error","$commandName -> Error killing the command");
                         throw (new CommandAlreadyRunningException)
                             ->setCommandName($commandName)
                             ->setPidNumber($pidOfRunningCommand);
@@ -119,7 +121,7 @@ class CommandLockEventListener extends ContainerAware
         }
         // if is not already executing create pid file
         file_put_contents($pidFile, getmypid());
-        $this->logger->info("$commandName -> File created: $pidFile");
+        $this->log("info","$commandName -> File created: $pidFile");
         // register shutdown function to remove pid file in case of unexpected exit
         register_shutdown_function(array($this, 'shutDown'), null, $pidFile);
     }
@@ -134,7 +136,7 @@ class CommandLockEventListener extends ContainerAware
         $commandName = $event->getCommand()->getName();
         if (isset($this->pidFile) && file_exists($this->pidFile)) {
             unlink($this->pidFile);
-            $this->logger->info("$commandName -> File removed: $this->pidFile");
+            $this->log("info","$commandName -> File removed: $this->pidFile");
         }
     }
 
@@ -159,7 +161,7 @@ class CommandLockEventListener extends ContainerAware
         }
         if (file_exists($pidFile)) {
             unlink($pidFile);
-            $this->logger->info("File removed by shutdown function: $this->pidFile");
+            $this->log("info","File removed by shutdown function: $this->pidFile");
         }
     }
     
@@ -176,5 +178,11 @@ class CommandLockEventListener extends ContainerAware
             }
         }
         return $time;
+    }
+    
+    private function log($function, $msg){
+        if ($this->logger){
+            $this->logger->$function($msg);
+        }
     }
 }
